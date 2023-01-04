@@ -24,7 +24,6 @@ int main() {
 	GLFWwindow *wnd = glfwCreateWindow(WWIDTH, WHEIGHT, "context", nullptr, nullptr);
 	glfwMakeContextCurrent(wnd);
 	glViewport(0, 0, WWIDTH, WHEIGHT);
-	glfwMakeContextCurrent(wnd);
 
 	if(glewInit() != GLEW_OK) {
 		cout << "error initializing GLEW\n";
@@ -43,6 +42,9 @@ int main() {
 	/* === text context === */
 
 	txt::Context ctx(WWIDTH, WHEIGHT);
+	ctx.fontLoad("data/fonts/arial.ttf", "arial");
+
+
 
 	/* === */
 

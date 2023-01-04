@@ -72,19 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)int\$(PlatformShortName)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\$(ProjectName)_int\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)int\$(PlatformShortName)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\$(ProjectName)_int\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)int\$(PlatformShortName)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\$(ProjectName)_int\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\</OutDir>
-    <IntDir>$(ProjectDir)int\$(PlatformShortName)\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\$(ProjectName)_int\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -171,6 +171,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="gl.cpp" />
     <ClCompile Include="source\text.cpp" />
   </ItemGroup>
   <ItemGroup>
