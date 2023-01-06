@@ -130,7 +130,7 @@ void txt::Context::fieldLoad(txt::Field *field) {
 
 	reposition(field);
 
-	field->createBuffer(m_VBO, m_EBO);
+	field->createBuffer(m_EBO);
 	field->populateBuffer();
 
 }

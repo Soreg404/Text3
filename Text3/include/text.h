@@ -20,6 +20,8 @@ namespace txt {
 		void unloadTexture();
 	};
 
+
+
 	class Field {
 		friend class Context;
 	public:
@@ -34,16 +36,17 @@ namespace txt {
 
 	private:
 
+		// loaded int one big buffer of <int, int> positions
 		struct CharInfo {
 			unsigned int count = 0, posHead = 0;
 			std::vector<std::pair<int, int>> positions;
 		};
-
-		std::vector<std::string> lastFonts;
 		std::map<char32_t, CharInfo> lastCharsUsage;
 
+		std::vector<std::string> lastFonts;
+
 		unsigned int m_VAO = 0, m_posBufferId = 0;
-		void createBuffer(unsigned int contextQuadVBO, unsigned int contextEBO);
+		void createBuffer(unsigned int contextEBO);
 		void deleteBuffer();
 		void bufferSubData(const void *buffer, int head, int size);
 
@@ -52,6 +55,8 @@ namespace txt {
 		void draw();
 
 	};
+
+
 
 	class Context {
 		static size_t nContexts;
@@ -72,8 +77,7 @@ namespace txt {
 
 		void initGL();
 		int m_nTexUnits = 0;
-		unsigned int m_shdId = 0;
-		unsigned int m_VBO = 0, m_EBO = 0;
+		unsigned int m_shd = 0, m_EBO = 0;
 
 		struct Font {
 			void add(char32_t c, int size, unsigned int count);
@@ -81,17 +85,17 @@ namespace txt {
 			void *h_ft = nullptr;
 			std::unordered_map<char32_t, GlyphInfo> glyphs;
 		};
-
 		std::unordered_map<std::string, Font> m_fonts;
+
+
+		void reposition(Field *textField);
+
 
 		struct UniformGlyphInfo {
 			unsigned int lastInstanceId = 0;
 			int x = 0, y = 0, w = 0, h = 0;
 		};
 		std::vector<UniformGlyphInfo> m_uGlyphs;
-
-		void reposition(Field *textField);
-
 		void prepForDrawing();
 
 	};

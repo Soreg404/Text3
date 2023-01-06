@@ -59,21 +59,17 @@ void txt::GlyphInfo::unloadTexture() {
 	if(id) glDeleteTextures(1, &id);
 }
 
-void txt::Field::createBuffer(unsigned int CtxQVBO, unsigned int CtxEBO) {
+void txt::Field::createBuffer(unsigned int CtxEBO) {
 	if(!m_VAO) {
 		glGenVertexArrays(1, &m_VAO);
 		glGenBuffers(1, &m_posBufferId);
 
 		glBindVertexArray(m_VAO);
 
-		glBindBuffer(GL_ARRAY_BUFFER, CtxQVBO);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-		glEnableVertexAttribArray(0);
-
 		glBindBuffer(GL_ARRAY_BUFFER, m_posBufferId);
-		glVertexAttribIPointer(1, 2, GL_INT, 0, nullptr);
-		glEnableVertexAttribArray(1);
-		glVertexAttribDivisor(1, 1);
+		glVertexAttribIPointer(0, 2, GL_INT, 0, nullptr);
+		glEnableVertexAttribArray(0);
+		glVertexAttribDivisor(0, 1);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CtxEBO);
 	} 
@@ -109,48 +105,41 @@ void txt::Context::initGL() {
 	m_uGlyphs.resize(m_nTexUnits);
 
 	// load shader
-	m_shdId = glCreateProgram();
+	m_shd = glCreateProgram();
 	GLuint vert = compileShd(GL_VERTEX_SHADER, "data/shd/shd.vert");
 	GLuint frag = compileShd(GL_FRAGMENT_SHADER, "data/shd/shd.frag");
-	glAttachShader(m_shdId, vert);
-	glAttachShader(m_shdId, frag);
-	glLinkProgram(m_shdId);
+	glAttachShader(m_shd, vert);
+	glAttachShader(m_shd, frag);
+	glLinkProgram(m_shd);
 	glDeleteShader(vert);
 	glDeleteShader(frag);
-	checkShdErr(m_shdId, false);
+	checkShdErr(m_shd, false);
 
-	// load buffers
-	float VBOvalues[] = {
-		100, 100,
-		50, 100,
-		50, 50,
-		100, 50
-	};
+	// load ebo
+	
+
+	glBindVertexArray(0);
+	glGenBuffers(1, &m_EBO);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+
 	unsigned int EBOvalues[] = {
 		0, 1, 2,
 		0, 2, 3
 	};
-
-	glBindVertexArray(0);
-	glGenBuffers(2, &m_VBO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(VBOvalues), VBOvalues, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(EBOvalues), EBOvalues, GL_STATIC_DRAW);
 
 }
 
 void txt::Context::setCtxSize(int width, int height) {
-	GLint loc = glGetUniformLocation(m_shdId, "uProj");
+	GLint loc = glGetUniformLocation(m_shd, "uProj");
 	if(loc != -1) {
-		glUseProgram(m_shdId);
+		glUseProgram(m_shd);
 		glm::mat4 proj = glm::ortho(0.f, static_cast<float>(width), 0.f, static_cast<float>(height), 1.f, 100.f);
 		glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(proj));
 	} else LOG("couldn't set window size in shader");
 }
 
 void txt::Context::prepForDrawing() {
-	glUseProgram(m_shdId);
+	glUseProgram(m_shd);
 }

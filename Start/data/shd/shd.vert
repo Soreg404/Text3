@@ -1,7 +1,6 @@
 #version 420 core
 
-layout(location = 0) in vec2 vquad;
-layout(location = 1) in ivec2 pos;
+layout(location = 0) in ivec2 pos;
 
 struct GlyphInfo {
 	unsigned int lastInstanceId;
@@ -25,10 +24,14 @@ void main() {
 			currGlyph = glyphs[i];
 		}
 	}
-
+	
+	vec2 ppos;
 	switch(gl_VertexID) {
-		case 0:  break;
+		case 0: ppos = vec2(100, 100); break;
+		case 1: ppos = vec2(50, 100); break;
+		case 2: ppos = vec2(50, 50); break;
+		case 3: ppos = vec2(100, 50); break;
 	}
 
-	gl_Position = uProj * vec4(vquad, -10, 1);
+	gl_Position = uProj * vec4(ppos, -10, 1);
 }
