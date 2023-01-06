@@ -4,13 +4,13 @@
 #include <glew/glew.h>
 #include <glfw/glfw3.h>
 
-int WWIDTH = 800, WHEIGHT = 600;
+int WWIDTH = 600, WHEIGHT = 600;
 
 using std::cout;
 
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
-	fprintf(stderr, "GL CALLBACK [%s]: type: 0x%x, severity: 0x%x, message: %s\n",
-			(type == GL_DEBUG_TYPE_ERROR ? "ERROR" : "info"),
+	fprintf(stderr, "GL CALLBACK [%s]: source: %u, type: 0x%x, severity: 0x%x, message: %s\n",
+			(type == GL_DEBUG_TYPE_ERROR ? "ERROR" : "info"), source,
 			type, severity, message);
 }
 
@@ -44,13 +44,19 @@ int main() {
 	txt::Context ctx(WWIDTH, WHEIGHT);
 	ctx.fontLoad("data/fonts/arial.ttf", "arial");
 
-
+	txt::Field fl1;
+	fl1.text = "abHello world!ab";
+	fl1.fonts = {"arial"};
+	
+	ctx.fieldLoad(&fl1);
 
 	/* === */
 
 	while(!glfwWindowShouldClose(wnd)) {
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		ctx.fieldDraw(&fl1);
 
 		glfwSwapBuffers(wnd);
 
