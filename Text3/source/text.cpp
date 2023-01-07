@@ -14,7 +14,7 @@ txt::Field::Field() {
 }
 
 txt::Field::~Field() {
-	deleteBuffer();
+	cleanup();
 }
 
 txt::Context::Context(int w, int h) {
@@ -43,7 +43,7 @@ txt::Context::~Context() {
 
 }
 
-void txt::Context::fontLoad(const char *path, const char *name) {
+void txt::Context::loadFont(const char *path, const char *name) {
 	if(m_fonts.find(name) != m_fonts.end()) {
 		LOG("font [%s] already loaded", name);
 		return;
@@ -58,11 +58,10 @@ void txt::Context::fontLoad(const char *path, const char *name) {
 			LOG("font [%s] other error", name);
 		return;
 	}
-	error = FT_Set_Pixel_Sizes(*ft, 0, 16);
 	LOG("loaded font [%s]", name);
 }
 
-void txt::Context::fontUnload(const char *name) {
+void txt::Context::unloadFont(const char *name) {
 	auto font = m_fonts.find(name);
 	if(font == m_fonts.end()) return;
 	FT_Face *ft = reinterpret_cast<FT_Face *>(&(font->second.h_ft));
@@ -80,6 +79,7 @@ const txt::GlyphInfo *txt::Context::fontGetGlyph(const char *name, int size, cha
 
 void txt::Context::Font::add(char32_t c, int size, unsigned int count) {
 	FT_Face *ft = reinterpret_cast<FT_Face *>(&h_ft);
+	FT_Set_Pixel_Sizes(*ft, 0, 120);
 	FT_Error error = FT_Load_Char(*ft, c, FT_LOAD_RENDER);
 	if(error) {
 		LOG("error loading glyph [%c]", c);
@@ -103,7 +103,7 @@ void txt::Context::Font::sub(char32_t c, int size, unsigned int count) {
 	} else f->second.uses -= count;
 }
 
-void txt::Context::fieldLoad(txt::Field *field) {
+void txt::Context::loadField(txt::Field *field) {
 	if(!field || !field->fonts.size()) {
 		LOG("no fonts selected");
 		return;
@@ -111,7 +111,8 @@ void txt::Context::fieldLoad(txt::Field *field) {
 
 	{
 		std::map<char32_t, Field::CharInfo> currCharsUsage;
-		for(auto c : field->text) currCharsUsage[c].count++;
+		for(unsigned char c : field->text)
+			currCharsUsage[c].count++;
 
 		const char *fname = field->fonts[0].c_str();
 		if(m_fonts.find(fname) == m_fonts.end()) {
@@ -135,9 +136,9 @@ void txt::Context::fieldLoad(txt::Field *field) {
 
 }
 
-void txt::Context::fieldDraw(Field *field) {
+void txt::Context::drawField(Field *field) {
 	if(!field || !field->m_VAO) return;
-	prepForDrawing();
+	prepForDrawing(field);
 	field->draw();
 }
 
@@ -152,20 +153,17 @@ void::txt::Context::reposition(Field *f) {
 			continue;
 		}
 		Field::CharInfo &cu = f->lastCharsUsage[c];
-		cu.positions[cu.posHead] = { advance + gi->x, line * 16 + gi->y };
+		cu.positions[cu.posHead++] = { advance + gi->x, -(line * 120) + gi->y };
 		advance += gi->a >> 6;
-		if(advance > 200) { advance = 0; line++; }
+		if(advance > 400) { advance = 0; line++; }
 	}
 }
 
 void txt::Field::populateBuffer() {
 	size_t head = 0;
-	std::vector<std::pair<int, int>> tmp;
 	for(auto &ui : lastCharsUsage) {
-		for(auto &p : ui.second.positions) tmp.push_back(p);
 		size_t size = ui.second.positions.size() * sizeof(int) * 2;
 		bufferSubData(ui.second.positions.data(), head, size);
 		head += size;
 	}
-	;
 }

@@ -8,6 +8,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+inline void print_gl_errors(const char *func, int line) {
+	while(int e = glGetError()) printf("<GL ERROR> [%s] %i: %X\n", func, line, e);
+}
+#define GLERR print_gl_errors(__FUNCTION__, __LINE__);
+
 std::vector<char> readFile(const char *path) {
 	std::fstream f(path, std::ios::in | std::ios::binary | std::ios::ate);
 	if(!f.good()) return {0};
@@ -49,9 +54,10 @@ GLuint compileShd(GLenum t, const char *fp) {
 void txt::GlyphInfo::loadTexture(const void *buff) {
 	glGenTextures(1, &id);
 	glBindTexture(GL_TEXTURE_2D, id);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, x, y, 0, GL_RED, GL_UNSIGNED_BYTE, buff);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, w, h, 0, GL_RED, GL_UNSIGNED_BYTE, buff);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
@@ -80,22 +86,23 @@ void txt::Field::createBuffer(unsigned int CtxEBO) {
 	glBufferData(GL_ARRAY_BUFFER, bs, nullptr, GL_STATIC_DRAW);
 }
 
-void txt::Field::deleteBuffer() {
-	if(m_VAO) {
-		glDeleteVertexArrays(1, &m_VAO);
-		glDeleteBuffers(1, &m_posBufferId);
-	}
-}
-
 void txt::Field::bufferSubData(const void *buff, int head, int size) {
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, m_posBufferId);
 	glBufferSubData(GL_ARRAY_BUFFER, head, size, buff);
 }
 
+void txt::Field::cleanup() {
+	if(m_VAO) {
+		glDeleteVertexArrays(1, &m_VAO);
+		glDeleteBuffers(1, &m_posBufferId);
+	}
+}
+
 void txt::Field::draw() {
 	glBindVertexArray(m_VAO);
-	glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 100);
+	//glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, text.length());
+	glDrawElementsInstancedBaseVertexBaseInstance(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, text.length(), 0, 0);
 }
 
 void txt::Context::initGL() {
@@ -115,8 +122,14 @@ void txt::Context::initGL() {
 	glDeleteShader(frag);
 	checkShdErr(m_shd, false);
 
+	// init sampler
+	glUseProgram(m_shd);
+	GLint loc = glGetUniformLocation(m_shd, "glyphTextures");
+	for(int i = 0; i < 32; i++) glUniform1i(loc + i, i);
+
+	GLERR;
+
 	// load ebo
-	
 
 	glBindVertexArray(0);
 	glGenBuffers(1, &m_EBO);
@@ -129,6 +142,8 @@ void txt::Context::initGL() {
 	};
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(EBOvalues), EBOvalues, GL_STATIC_DRAW);
 
+	GLERR;
+
 }
 
 void txt::Context::setCtxSize(int width, int height) {
@@ -140,6 +155,39 @@ void txt::Context::setCtxSize(int width, int height) {
 	} else LOG("couldn't set window size in shader");
 }
 
-void txt::Context::prepForDrawing() {
+void txt::Context::prepForDrawing(Field *field) {
 	glUseProgram(m_shd);
+	int i = 0;
+	unsigned int counter = 0;
+	char sprBuff[60]{0};
+	for(auto &ui : field->lastCharsUsage) {
+		const GlyphInfo *gi = fontGetGlyph(field->lastFonts[0].c_str(), 0, ui.first);
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, gi->id);
+		counter += ui.second.count;
+
+		int stc = sprintf_s(sprBuff, 30, "glyphs[%i].", i);
+
+		strcpy_s(sprBuff + stc, 30, "lastInstanceID");
+		GLint uGlyphIns = glGetUniformLocation(m_shd, sprBuff);
+
+		strcpy_s(sprBuff + stc, 30, "x");
+		GLint uGlyphX = glGetUniformLocation(m_shd, sprBuff);
+		strcpy_s(sprBuff + stc, 30, "y");
+		GLint uGlyphY = glGetUniformLocation(m_shd, sprBuff);
+		strcpy_s(sprBuff + stc, 30, "w");
+		GLint uGlyphW = glGetUniformLocation(m_shd, sprBuff);
+		strcpy_s(sprBuff + stc, 30, "h");
+		GLint uGlyphH = glGetUniformLocation(m_shd, sprBuff);
+		glUniform1ui(uGlyphIns, counter);
+		glUniform1i(uGlyphX, gi->x);
+		glUniform1i(uGlyphY, gi->y);
+		glUniform1i(uGlyphW, gi->w);
+		glUniform1i(uGlyphH, gi->h);
+		i++;
+	}
+
+	glUniform1i(glGetUniformLocation(m_shd, "uCount"), field->text.length());
+
+	GLERR
 }

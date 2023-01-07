@@ -4,6 +4,8 @@
 #include <glew/glew.h>
 #include <glfw/glfw3.h>
 
+std::vector<char> readFile(const char *path);
+
 int WWIDTH = 600, WHEIGHT = 600;
 
 using std::cout;
@@ -34,29 +36,33 @@ int main() {
 	cout << "gl version: " << glVer << "\n";
 
 	glClearColor(.7f, .7f, .7f, 1.f);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_DEBUG_OUTPUT);
+	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(MessageCallback, 0);
 
 
 	/* === text context === */
 
 	txt::Context ctx(WWIDTH, WHEIGHT);
-	ctx.fontLoad("data/fonts/arial.ttf", "arial");
+	ctx.loadFont("data/fonts/arial.ttf", "arial");
 
+	auto src = readFile("data/sample.txt");
 	txt::Field fl1;
-	fl1.text = "abHello world!ab";
+	fl1.text = src.data();
 	fl1.fonts = {"arial"};
 	
-	ctx.fieldLoad(&fl1);
+	ctx.loadField(&fl1);
 
 	/* === */
 
+
 	while(!glfwWindowShouldClose(wnd)) {
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT/* | GL_DEPTH_BUFFER_BIT*/);
 
-		ctx.fieldDraw(&fl1);
+		ctx.drawField(&fl1);
 
 		glfwSwapBuffers(wnd);
 

@@ -3,7 +3,7 @@
 layout(location = 0) in ivec2 pos;
 
 struct GlyphInfo {
-	unsigned int lastInstanceId;
+	unsigned int lastInstanceID;
 	int x, y, w, h;
 };
 uniform GlyphInfo glyphs[32];
@@ -17,21 +17,28 @@ out vec2 uv;
 void main() {
 
 	instID = gl_InstanceID;
-	GlyphInfo currGlyph;
+	int x = 0, y = 0, w = 0, h = 0;
 	for(int i = 0; i < 32; i++) {
-		if(instID < glyphs[i].lastInstanceId) {
+		if(instID < glyphs[i].lastInstanceID) {
 			nGlyph = i;
-			currGlyph = glyphs[i];
+			x = glyphs[i].x;
+			y = glyphs[i].y;
+			w = glyphs[i].w;
+			h = glyphs[i].h;
+			break;
 		}
 	}
+
 	
 	vec2 ppos;
-	switch(gl_VertexID) {
-		case 0: ppos = vec2(100, 100); break;
-		case 1: ppos = vec2(50, 100); break;
-		case 2: ppos = vec2(50, 50); break;
-		case 3: ppos = vec2(100, 50); break;
+	switch(gl_VertexID % 4) {
+		case 0: ppos = vec2(x, y - h);		uv = vec2(0, 1); break;
+		case 1: ppos = vec2(x, y);			uv = vec2(0, 0); break;
+		case 2: ppos = vec2(x + w, y);		uv = vec2(1, 0); break;
+		case 3: ppos = vec2(x + w, y - h);	uv = vec2(1, 1); break;
 	}
 
-	gl_Position = uProj * vec4(ppos, -10, 1);
+	if(w == 0) ppos = vec2(0, 0);
+
+	gl_Position = uProj * vec4(pos + ppos + vec2(0, 400), -1, 1);
 }

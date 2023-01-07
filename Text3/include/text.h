@@ -45,13 +45,15 @@ namespace txt {
 
 		std::vector<std::string> lastFonts;
 
+		// called in Context::fieldLoad()
 		unsigned int m_VAO = 0, m_posBufferId = 0;
 		void createBuffer(unsigned int contextEBO);
-		void deleteBuffer();
+		void populateBuffer();
 		void bufferSubData(const void *buffer, int head, int size);
 
-		void populateBuffer();
+		void cleanup();
 
+		// called in Context::fieldDraw()
 		void draw();
 
 	};
@@ -65,13 +67,13 @@ namespace txt {
 		~Context();
 		void setCtxSize(int width, int height);
 
-		void fontLoad(const char *path, const char *name);
-		void fontUnload(const char *name);
+		void loadFont(const char *path, const char *name);
+		void unloadFont(const char *name);
 
 		const GlyphInfo *fontGetGlyph(const char *fontName, int size, char32_t charcter);
 
-		void fieldLoad(Field *textField);
-		void fieldDraw(Field *textField);
+		void loadField(Field *textField);
+		void drawField(Field *textField);
 
 	private:
 
@@ -96,7 +98,7 @@ namespace txt {
 			int x = 0, y = 0, w = 0, h = 0;
 		};
 		std::vector<UniformGlyphInfo> m_uGlyphs;
-		void prepForDrawing();
+		void prepForDrawing(Field *textField);
 
 	};
 
